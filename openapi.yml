@@ -1,0 +1,155 @@
+swagger: "2.0"
+info:
+  description: "This is a sample wallet service."
+  version: "1.0.0"
+  title: "Wallet Service"
+  contact:
+    email: "nalcheg@gmail.com"
+  license:
+    name: "proprietary"
+host: "localhost:9030"
+schemes:
+  - "http"
+tags:
+  - name: "account"
+  - name: "payment"
+paths:
+  /account/{account_id}:
+    get:
+      tags:
+        - "account"
+      parameters:
+        - name: "account_id"
+          in: "path"
+          required: true
+          type: "string"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          $ref: "#/definitions/Account"
+        500:
+          description: "error"
+  /account:
+    post:
+      tags:
+        - "account"
+      consumes:
+        - "application/x-www-form-urlencoded"
+      parameters:
+        - name: "account"
+          in: "formData"
+          required: true
+          type: "string"
+        - name: "balance"
+          in: "formData"
+          required: true
+          type: "number"
+          format: "float64"
+        - name: "currency"
+          in: "formData"
+          required: true
+          type: "string"
+      responses:
+        204:
+          description: "account created"
+        409:
+          description: "account exists"
+        500:
+          description: "error"
+  /payment:
+    get:
+      tags:
+        - "payment"
+      consumes:
+        - "application/x-www-form-urlencoded"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "page"
+          in: "formData"
+          required: false
+          type: "integer"
+        - name: "perpage"
+          in: "formData"
+          required: false
+          type: "integer"
+        - name: "account_id"
+          in: "formData"
+          required: false
+          type: "string"
+        - name: "direction"
+          in: "formData"
+          required: false
+          type: "string"
+          enum:
+            - "outgoing"
+            - "incoming"
+      responses:
+        200:
+          description: "all payments"
+          schema:
+            items:
+              $ref: "#/definitions/PaymentsResponse"
+        500:
+          description: "error"
+    post:
+      tags:
+        - "payment"
+      consumes:
+        - "application/x-www-form-urlencoded"
+      parameters:
+        - name: "account"
+          in: "formData"
+          required: true
+          type: "string"
+        - name: "to_account"
+          in: "formData"
+          required: true
+          type: "string"
+        - name: "amount"
+          in: "formData"
+          required: true
+          type: "number"
+          format: "float"
+      responses:
+        204:
+          description: "successfull payment"
+        500:
+          description: "error"
+definitions:
+  Account:
+    type: "object"
+    properties:
+      id:
+        type: "string"
+      balance:
+        type: "number"
+        format: "float"
+      currency:
+        type: "string"
+  Payment:
+    properties:
+      id:
+        type: "string"
+        format: "uuid"
+      amount:
+        type: "number"
+        format: "float"
+      account:
+        type: "string"
+      to_account:
+        type: "string"
+      from_account:
+        type: "string"
+      direction:
+        type: "string"
+  PaymentsResponse:
+    type: "object"
+    properties:
+      total:
+        type: "integer"
+      payments:
+        type: "array"
+        items:
+          $ref: "#/definitions/Payment"

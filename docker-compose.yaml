@@ -1,0 +1,29 @@
+version: "3"
+
+services:
+  postgres:
+    image: postgres:12
+    ports:
+      - 55432:5432
+    environment:
+      POSTGRES_DB: "wallet"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+
+  wallet:
+    depends_on:
+      - postgres
+    build:
+      dockerfile: ./docker/wallet/Dockerfile
+      context: .
+    environment:
+      DB_DSN: "user=postgres password=postgres host=postgres port=5432 dbname=wallet sslmode=disable"
+      LISTEN_ADDR: ":9022"
+
+  nginx:
+    depends_on:
+      - wallet
+    build:
+      context: ./docker/nginx/
+    ports:
+      - 9030:80
