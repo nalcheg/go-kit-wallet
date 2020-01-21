@@ -21,6 +21,7 @@ const (
 	sideA         = "bank_usd"
 	sideB         = "alice"
 	requestsCount = 1000
+	timeout       = 3 * time.Millisecond
 )
 
 type result struct {
@@ -61,13 +62,12 @@ func TestConcurrentPayments(t *testing.T) {
 			break
 		}
 		res.Unlock()
-		time.Sleep(2 * time.Second)
+		time.Sleep(timeout)
 	}
 
 	res.Lock()
 	defer res.Unlock()
 	wantedBalanceDiff := uint64(res.TwoHundredth)
-
 	finalBalances, err := getABSidesBalances(db, accountBalanceQuery, sideA, sideB)
 	if err != nil {
 		t.Fatal(err)
@@ -143,12 +143,16 @@ func TestConcurrentPaymentsWithChannels(t *testing.T) {
 
 	rCh := make(chan int, requestsCount)
 
+	wg := sync.WaitGroup{}
 	for i := 0; i < requestsCount; i++ {
-		go doPaymentRequestChannel(rCh)
+		wg.Add(1)
+		go doPaymentRequestChannel(rCh, &wg)
+		time.Sleep(timeout)
 	}
+	wg.Wait()
+	close(rCh)
 
 	res := result{}
-	i := 0
 	for respCode := range rCh {
 		switch respCode {
 		case 200:
@@ -158,15 +162,9 @@ func TestConcurrentPaymentsWithChannels(t *testing.T) {
 		default:
 			panic(errors.New(fmt.Sprintf("unexpected response code %d", respCode)))
 		}
-
-		i++
-		if i == requestsCount {
-			close(rCh)
-		}
 	}
 
 	wantedBalanceDiff := uint64(res.TwoHundredth)
-
 	finalBalances, err := getABSidesBalances(db, accountBalanceQuery, sideA, sideB)
 	if err != nil {
 		t.Fatal(err)
@@ -190,7 +188,9 @@ func TestConcurrentPaymentsWithChannels(t *testing.T) {
 	}
 }
 
-func doPaymentRequestChannel(ch chan int) {
+func doPaymentRequestChannel(ch chan int, wg *sync.WaitGroup) {
+	defer wg.Done()
+
 	formData := url.Values{
 		"account":    {sideA},
 		"to_account": {sideB},
