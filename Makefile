@@ -7,8 +7,10 @@ run-wallets: ## docker-compose up -d --scale wallet=5 --build wallet
 flap-postgres: ## rm and up postgres service
 	docker-compose rm -sf postgres
 	docker-compose up -d postgres
-test-concurent-payments: ## run concurent payments test
-	@go test -tags manual -v cmd/manual_service_test.go
+test-concurent-payments-1: ## run concurent payments test variant 1 (results in struct with mutex)
+	@go test -race -tags manual -run ^TestConcurrentPayments$$ -v cmd/manual_service_test.go
+test-concurent-payments-2: ## run concurent payments test variant 2 (results received via channel)
+	@go test -race -tags manual -run ^TestConcurrentPaymentsWithChannels$$ -v cmd/manual_service_test.go
 insert-accounts: ## insert sample accounts
 	curl -d "account=bank_usd&currency=USD&balance=10050000000000" http://127.0.0.1:9030/account
 	curl -d "account=bank_rub&currency=RUB&balance=10050000000000" http://127.0.0.1:9030/account
