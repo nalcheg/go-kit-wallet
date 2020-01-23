@@ -11,16 +11,27 @@ import (
 const (
 	DefaultOffset = uint64(0)
 	DefaultLimit  = uint64(10)
+
+	Outgoing Direction = true
+	Incoming Direction = false
 )
 
 type (
+	repo struct {
+		db     *sql.DB
+		logger log.Logger
+	}
+
+	Direction bool
+
 	PaymentsResponse struct {
 		Total    uint64
 		Payments []*Payment
 	}
-	repo struct {
-		db     *sql.DB
-		logger log.Logger
+
+	initialState struct {
+		fromBalance, toBalance   uint64
+		fromCurrency, toCurrency string
 	}
 )
 
@@ -156,18 +167,6 @@ func (repo *repo) DoPayment(fromAccountID, toAccountID string, amount uint64) er
 	}
 
 	return nil
-}
-
-type Direction bool
-
-const (
-	Outgoing Direction = true
-	Incoming Direction = false
-)
-
-type initialState struct {
-	fromBalance, toBalance   uint64
-	fromCurrency, toCurrency string
 }
 
 func (repo *repo) insertPayments(tx *sql.Tx, direction Direction, amount uint64, accountID, secondAccountID string) error {
