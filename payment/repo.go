@@ -118,7 +118,7 @@ func (repo *repo) DoPayment(fromAccountID, toAccountID string, amount uint64) er
 		return NoCurrenciesExchange
 	}
 
-	if amount > initialState.fromBalance-amount {
+	if amount > initialState.fromBalance {
 		if err := tx.Rollback(); err != nil {
 			return err
 		}
