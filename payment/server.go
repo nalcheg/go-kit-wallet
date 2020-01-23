@@ -9,7 +9,7 @@ func AddEndpoints(r *mux.Router, endpoints Endpoints) *mux.Router {
 	r.Methods("POST").Path("/payment").Handler(httptransport.NewServer(
 		endpoints.DoPayment,
 		DecodeDoPaymentReq,
-		EncodeResponse,
+		EmptyResponse,
 	))
 
 	r.Methods("GET").Path("/payment").Handler(httptransport.NewServer(

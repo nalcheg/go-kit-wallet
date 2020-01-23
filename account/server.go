@@ -9,7 +9,7 @@ func AddEndpoints(r *mux.Router, endpoints Endpoints) *mux.Router {
 	r.Methods("POST").Path("/account").Handler(httptransport.NewServer(
 		endpoints.CreateAccount,
 		DecodeCreateAccountReq,
-		EncodeResponse,
+		EmptyResponse,
 	))
 
 	r.Methods("GET").Path("/account/{id}").Handler(httptransport.NewServer(

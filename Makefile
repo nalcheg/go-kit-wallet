@@ -3,6 +3,7 @@ SHELL:=/bin/bash
 run: ## docker-compose up -d --scale wallet=5
 	@docker-compose up -d --scale wallet=5
 run-wallets: ## docker-compose up -d --scale wallet=5 --build wallet
+	@docker-compose rm -sf wallet
 	@docker-compose up -d --scale wallet=5 --build wallet
 flap-postgres: ## rm and up postgres service
 	docker-compose rm -sf postgres

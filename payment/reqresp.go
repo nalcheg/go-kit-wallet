@@ -30,6 +30,10 @@ func EncodeResponse(ctx context.Context, w http.ResponseWriter, response interfa
 	return json.NewEncoder(w).Encode(response)
 }
 
+func EmptyResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {
+	return nil
+}
+
 func DecodeDoPaymentReq(ctx context.Context, r *http.Request) (interface{}, error) {
 	var req DoPaymentRequest
 

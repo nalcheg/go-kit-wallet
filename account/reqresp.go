@@ -33,6 +33,10 @@ func EncodeResponse(ctx context.Context, w http.ResponseWriter, response interfa
 	return json.NewEncoder(w).Encode(response)
 }
 
+func EmptyResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {
+	return nil
+}
+
 func DecodeCreateAccountReq(ctx context.Context, r *http.Request) (interface{}, error) {
 	var req CreateAccountRequest
 	if err := r.ParseForm(); err != nil {
