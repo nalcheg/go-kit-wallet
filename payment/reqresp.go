@@ -83,9 +83,9 @@ func DecodeGetPaymentsReq(ctx context.Context, r *http.Request) (interface{}, er
 			req.AccountID = &value[0]
 		case "direction":
 			var d Direction
-			if value[0] == "incoming" {
+			if value[0] == IncomingStr {
 				d = Incoming
-			} else if value[0] == "outgoing" {
+			} else if value[0] == OutgoingStr {
 				d = Outgoing
 			} else {
 				break

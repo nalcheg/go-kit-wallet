@@ -14,6 +14,9 @@ const (
 
 	Outgoing Direction = true
 	Incoming Direction = false
+
+	OutgoingStr = "outgoing"
+	IncomingStr = "incoming"
 )
 
 type (
@@ -52,12 +55,12 @@ func (repo *repo) GetPayments(req *GetPaymentsRequest) (*PaymentsResponse, error
 		offset = (*req.Page - 1) * limit
 	}
 
-	where := ` WHERE 1=1 `
+	var where WhereCondition
 	if req.Direction != nil {
 		if *req.Direction == Incoming {
-			where += ` AND to_account IS NULL `
+			where = where.AddCondition(`to_account IS NULL `)
 		} else if *req.Direction == Outgoing {
-			where += ` AND from_account IS NULL `
+			where = where.AddCondition(`from_account IS NULL `)
 		}
 	}
 
@@ -68,17 +71,17 @@ func (repo *repo) GetPayments(req *GetPaymentsRequest) (*PaymentsResponse, error
 	var err error
 	var total uint64
 	if req.AccountID != nil {
-		where += ` AND account = $1 `
-		if err := repo.db.QueryRow(countQuery+where, req.AccountID).Scan(&total); err != nil {
+		where = where.AddCondition(`account = $1 `)
+		if err := repo.db.QueryRow(countQuery+where.String(), req.AccountID).Scan(&total); err != nil {
 			return nil, err
 		}
-		query += where + ` LIMIT $2 OFFSET $3`
+		query += where.String() + ` LIMIT $2 OFFSET $3`
 		rows, err = repo.db.Query(query, req.AccountID, limit, offset)
 	} else {
-		if err := repo.db.QueryRow(countQuery + where).Scan(&total); err != nil {
+		if err := repo.db.QueryRow(countQuery + where.String()).Scan(&total); err != nil {
 			return nil, err
 		}
-		query += where + ` LIMIT $1 OFFSET $2`
+		query += where.String() + ` LIMIT $1 OFFSET $2`
 		rows, err = repo.db.Query(query, limit, offset)
 	}
 	if err != nil {
@@ -86,22 +89,23 @@ func (repo *repo) GetPayments(req *GetPaymentsRequest) (*PaymentsResponse, error
 	}
 
 	var resp PaymentsResponse
+	resp.Payments = []*Payment{}
 	resp.Total = total
 
 	for rows.Next() {
 		var p Payment
-		var amount uint64
+		var amount float64
 		if err := rows.Scan(&p.ID, &amount, &p.Account, &p.FromAccount, &p.ToAccount); err != nil {
 			return nil, err
 		}
 
 		if p.ToAccount == nil {
-			p.Direction = "incoming"
+			p.Direction = IncomingStr
 		} else if p.FromAccount == nil {
-			p.Direction = "outgoing"
+			p.Direction = OutgoingStr
 		}
 
-		p.Amount = float64(amount) / 100
+		p.Amount = amount / 100
 
 		resp.Payments = append(resp.Payments, &p)
 	}
