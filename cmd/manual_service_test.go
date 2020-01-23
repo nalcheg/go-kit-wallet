@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nalcheg/go-kit-wallet/dbconf"
+	"github.com/nalcheg/go-kit-wallet/dbconn"
 )
 
 const (
@@ -35,7 +35,7 @@ type result struct {
 var accountBalanceQuery = `SELECT balance FROM accounts WHERE id = $1`
 
 func TestConcurrentPayments(t *testing.T) {
-	db, err := dbconf.Connect(dbDSN)
+	db, err := dbconn.Connect(dbDSN)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -53,6 +53,7 @@ func TestConcurrentPayments(t *testing.T) {
 
 	for i := 0; i < requestsCount; i++ {
 		go doPaymentRequest(res)
+		time.Sleep(timeout)
 	}
 
 	for {
@@ -62,7 +63,6 @@ func TestConcurrentPayments(t *testing.T) {
 			break
 		}
 		res.Unlock()
-		time.Sleep(timeout)
 	}
 
 	res.Lock()
@@ -131,7 +131,7 @@ func doPaymentRequest(results *result) {
 }
 
 func TestConcurrentPaymentsWithChannels(t *testing.T) {
-	db, err := dbconf.Connect(dbDSN)
+	db, err := dbconn.Connect(dbDSN)
 	if err != nil {
 		t.Fatal(err)
 	}

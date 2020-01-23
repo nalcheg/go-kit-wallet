@@ -13,7 +13,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/nalcheg/go-kit-wallet/account"
-	"github.com/nalcheg/go-kit-wallet/dbconf"
+	"github.com/nalcheg/go-kit-wallet/dbconn"
 	"github.com/nalcheg/go-kit-wallet/payment"
 )
 
@@ -38,26 +38,26 @@ func main() {
 		os.Exit(-1)
 	}
 
-	dbc, err := dbconf.Connect(dbDSN)
+	db, err := dbconn.Connect(dbDSN)
 	if err != nil {
 		level.Error(logger).Log("exit", err)
 		os.Exit(-1)
 	}
-	if err := dbconf.Migrate(dbc); err != nil {
+	if err := dbconn.Migrate(db); err != nil {
 		level.Error(logger).Log("exit", err)
 		os.Exit(-1)
 	}
 
 	var accountSrv account.Service
 	{
-		repository := account.NewRepo(dbc, logger)
+		repository := account.NewRepo(db, logger)
 		accountSrv = account.NewService(repository, logger)
 	}
 	accountEndpoints := account.MakeEndpoints(accountSrv)
 
 	var paymentSrv payment.Service
 	{
-		repository := payment.NewRepo(dbc, logger)
+		repository := payment.NewRepo(db, logger)
 		paymentSrv = payment.NewService(repository, logger)
 	}
 	paymentEndpoints := payment.MakeEndpoints(paymentSrv)
